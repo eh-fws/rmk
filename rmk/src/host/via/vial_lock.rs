@@ -29,9 +29,12 @@ impl<'a, const ROW: usize, const COL: usize, const NUM_LAYER: usize, const NUM_E
     pub fn is_unlocked(&self) -> bool {
         self.unlocked
     }
+    /// Called when all unlock keys are pressed — records the start time
     pub fn unlocking(&mut self) {
-        self.unlocking = true;
-        self.last_poll = embassy_time::Instant::now();
+        if !self.unlocking {
+            self.unlocking = true;
+            self.last_poll = embassy_time::Instant::now();
+        }
     }
     pub fn unlock(&mut self) {
         if self.unlocking {
@@ -51,7 +54,16 @@ impl<'a, const ROW: usize, const COL: usize, const NUM_LAYER: usize, const NUM_E
                 }
             }
             if counter == 0 {
-                self.unlock();
+                // All keys held — start or continue the timer
+                self.unlocking();
+                // Unlock only after holding for the required duration
+                if self.last_poll.elapsed() >= embassy_time::Duration::from_secs(10) {
+                    self.unlock();
+                }
+            } else {
+                // Keys released — reset timer
+                self.unlocking = false;
+                self.last_poll = embassy_time::Instant::MIN;
             }
             counter
         }
@@ -60,8 +72,6 @@ impl<'a, const ROW: usize, const COL: usize, const NUM_LAYER: usize, const NUM_E
         self.unlocked = false;
     }
     fn update_unlocking_state(&mut self) {
-        if self.last_poll.elapsed() > embassy_time::Duration::from_secs(10) {
-            self.unlocking = false;
-        }
+        // No longer needed — reset is handled in check_unlock
     }
 }
