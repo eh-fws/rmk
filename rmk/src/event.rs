@@ -60,6 +60,11 @@ impl KeyboardEvent {
             pos: KeyboardEventPos::RotaryEncoder(RotaryEncoderPos { id, direction }),
         }
     }
+
+    /// Returns true if this event is a key-press (not release).
+    pub fn is_pressed(&self) -> bool {
+        self.pressed
+    }
 }
 
 /// The position of the keyboard event.
