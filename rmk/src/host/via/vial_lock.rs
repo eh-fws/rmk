@@ -60,7 +60,7 @@ impl<'a, const ROW: usize, const COL: usize, const NUM_LAYER: usize, const NUM_E
         self.unlocked = false;
     }
     fn update_unlocking_state(&mut self) {
-        if self.last_poll.elapsed() > embassy_time::Duration::from_millis(500) {
+        if self.last_poll.elapsed() > embassy_time::Duration::from_secs(10) {
             self.unlocking = false;
         }
     }
