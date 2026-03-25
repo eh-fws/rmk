@@ -76,7 +76,7 @@ pub static CONTROLLER_CHANNEL: PubSubChannel<
 #[cfg(feature = "storage")]
 pub(crate) static FLASH_CHANNEL: Channel<RawMutex, FlashOperationMessage, FLASH_CHANNEL_SIZE> = Channel::new();
 #[cfg(feature = "_ble")]
-pub(crate) static BLE_PROFILE_CHANNEL: Channel<RawMutex, BleProfileAction, 1> = Channel::new();
+pub static BLE_PROFILE_CHANNEL: Channel<RawMutex, BleProfileAction, 1> = Channel::new();
 
 /// Send the specified `event` to `CONTROLLER_CHANNEL`.
 #[cfg(feature = "controller")]

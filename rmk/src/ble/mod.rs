@@ -57,7 +57,7 @@ pub(crate) mod device_info;
 #[cfg(feature = "host")]
 pub(crate) mod host_service;
 pub(crate) mod led;
-pub(crate) mod profile;
+pub mod profile;
 
 #[derive(Clone, Copy, Debug)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
