@@ -60,7 +60,7 @@ pub(crate) mod host_service;
 pub(crate) mod led;
 #[cfg(feature = "passkey_entry")]
 pub mod passkey;
-pub(crate) mod profile;
+pub mod profile;
 
 /// Global BLE status: tracks the active profile and current BLE state.
 pub static BLE_STATUS: Mutex<crate::RawMutex, Cell<BleStatus>> = Mutex::new(Cell::new(BleStatus {
