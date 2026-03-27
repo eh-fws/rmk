@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
 use rmk_config::{
-    BoardConfig, ChipModel, ChipSeries, CommunicationConfig, InputDeviceConfig, KeyboardTomlConfig, MatrixType,
+    BleConfig, BoardConfig, ChipModel, ChipSeries, CommunicationConfig, InputDeviceConfig, KeyboardTomlConfig, MatrixType,
     SplitBoardConfig, SplitConfig,
 };
 use syn::ItemMod;
@@ -338,7 +338,7 @@ pub(crate) fn expand_peripheral_input_device_config(
     let processors = Vec::new();
 
     let communication = keyboard_config.get_communication_config().unwrap();
-    let ble_config = match &communication {
+    let global_ble_config = match &communication {
         CommunicationConfig::Ble(ble_config) | CommunicationConfig::Both(_, ble_config) => Some(ble_config.clone()),
         _ => None,
     };
@@ -346,17 +346,34 @@ pub(crate) fn expand_peripheral_input_device_config(
     let chip = keyboard_config.get_chip_model().unwrap();
 
     // generate ADC configuration
+    // Use per-peripheral battery config if available, otherwise fall back to global [ble] config
     let (adc_devices, _adc_processors) = match &board {
-        BoardConfig::Split(split_config) => expand_adc_device(
-            split_config.peripheral[id]
-                .input_device
-                .clone()
-                .unwrap_or(InputDeviceConfig::default())
-                .joystick
-                .unwrap_or(Vec::new()),
-            ble_config,
-            chip.series.clone(),
-        ),
+        BoardConfig::Split(split_config) => {
+            let peripheral = &split_config.peripheral[id];
+            let ble_config = if peripheral.battery_adc_pin.is_some() {
+                // Override global ble config with peripheral-specific battery settings
+                let mut periph_ble = global_ble_config.clone().unwrap_or_else(|| BleConfig {
+                    enabled: true,
+                    ..Default::default()
+                });
+                periph_ble.battery_adc_pin = peripheral.battery_adc_pin.clone();
+                periph_ble.adc_divider_measured = peripheral.adc_divider_measured;
+                periph_ble.adc_divider_total = peripheral.adc_divider_total;
+                Some(periph_ble)
+            } else {
+                global_ble_config.clone()
+            };
+            expand_adc_device(
+                peripheral
+                    .input_device
+                    .clone()
+                    .unwrap_or(InputDeviceConfig::default())
+                    .joystick
+                    .unwrap_or(Vec::new()),
+                ble_config,
+                chip.series.clone(),
+            )
+        },
         _ => (vec![], vec![]),
     };
 
